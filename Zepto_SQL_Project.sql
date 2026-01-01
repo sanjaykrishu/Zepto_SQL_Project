@@ -131,4 +131,54 @@ SELECT category,
 SUM(weightInGms * availableQuantity) AS total_weight
 FROM zepto
 GROUP BY category
+
 ORDER BY total_weight;
+
+--Q9. Top 3 Most Expensive Products per Category (by MRP)
+WITH ranked_products AS (
+    SELECT 
+        sku_id,
+        category,
+        name,
+        mrp,
+        ROW_NUMBER() OVER(
+            PARTITION BY category 
+            ORDER BY mrp DESC
+        ) AS rn
+    FROM products
+)
+SELECT *
+FROM ranked_products
+WHERE rn <= 3;
+
+--Q10. Products Whose Discounted Price is Greater Than Category Avg Discounted Price
+WITH price_avg AS (
+    SELECT 
+        sku_id,
+        category,
+        name,
+        discountedSellingPrice,
+        AVG(discountedSellingPrice) OVER(
+            PARTITION BY category
+        ) AS category_avg_discount_price
+    FROM products
+)
+SELECT *
+FROM price_avg
+WHERE discountedSellingPrice > category_avg_discount_price;
+
+--Q11. Products With Lowest Discounted Price in Each Category
+WITH price_data AS (
+    SELECT 
+        sku_id,
+        category,
+        name,
+        discountedSellingPrice,
+        MIN(discountedSellingPrice) OVER(
+            PARTITION BY category
+        ) AS min_price
+    FROM products
+)
+SELECT *
+FROM price_data
+WHERE discountedSellingPrice = min_price;
